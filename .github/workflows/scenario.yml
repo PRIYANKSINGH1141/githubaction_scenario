@@ -1,29 +1,119 @@
-name: Variable Precedence Demo
+name: Complete GitHub Actions CI/CD Demo
 
+# Trigger
 on:
   push:
     branches:
       - main
 
+# Workflow-Level Variables
 env:
-  ENVIRONMENT: Development
+  APP_NAME: WorkflowApp
+  NODE_VERSION: "20"
 
 jobs:
-  build:
+
+  # ---------------- BUILD FRONTEND ----------------
+  build_frontend:
     runs-on: ubuntu-latest
 
+    # Job-Level Variable
     env:
-      ENVIRONMENT: Testing
+      APP_NAME: FrontendApp
 
     steps:
 
-      - name: Step 1
-        run: echo $ENVIRONMENT
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Step 2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Workflow vs Job Variable
+        run: |
+          echo "Application = $APP_NAME"
+          echo "Node Version = $NODE_VERSION"
+
+      - name: Step Variable Example
         env:
-          ENVIRONMENT: Production
-        run: echo $ENVIRONMENT
+          APP_NAME: StepFrontendApp
+        run: |
+          echo "Application = $APP_NAME"
 
-      - name: Step 3
-        run: echo $ENVIRONMENT
+      - name: Install Dependencies
+        run: echo "npm install"
+
+      - name: Build Frontend
+        run: echo "Frontend Build Completed"
+
+
+  # ---------------- BUILD BACKEND ----------------
+  build_backend:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Backend
+        run: echo "Backend Build Completed"
+
+
+  # ---------------- UNIT TEST ----------------
+  unit_test:
+    needs: build_frontend
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Run Unit Test
+        run: echo "Running Frontend Unit Tests"
+
+
+  # ---------------- API TEST ----------------
+  api_test:
+    needs: build_backend
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Run API Test
+        run: echo "Running Backend API Tests"
+
+
+  # ---------------- SECURITY SCAN ----------------
+  security_scan:
+    needs:
+      - unit_test
+      - api_test
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Security Scan
+        run: echo "Running Security Scan"
+
+
+  # ---------------- DEPLOY ----------------
+  deploy:
+    needs: security_scan
+
+    runs-on: ubuntu-latest
+
+    # GitHub Environment
+    environment: Production
+
+    steps:
+
+      - name: Deploy Application
+        run: echo "Deploying to Production"
+
+      - name: Print Workflow Variable
+        run: echo "Workflow Variable = $APP_NAME"
+
+      - name: Print Environment Variable
+        run: echo "Environment Name = Production"
