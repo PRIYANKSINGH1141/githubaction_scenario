@@ -1,12 +1,10 @@
 name: Complete GitHub Actions CI/CD Demo
 
-# Trigger
 on:
   push:
     branches:
       - main
 
-# Workflow-Level Variables
 env:
   APP_NAME: WorkflowApp
   NODE_VERSION: "24"
@@ -17,12 +15,10 @@ jobs:
   build_frontend:
     runs-on: ubuntu-latest
 
-    # Job-Level Variable
     env:
       APP_NAME: FrontendApp
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -46,7 +42,16 @@ jobs:
         run: echo "npm install"
 
       - name: Build Frontend
-        run: echo "Frontend Build Completed"
+        run: |
+          mkdir build
+          echo "Frontend Build Completed" > build/frontend.txt
+
+      # Upload Artifact
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: build/
 
 
   # ---------------- BUILD BACKEND ----------------
@@ -54,12 +59,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Build Backend
-        run: echo "Backend Build Completed"
+        run: |
+          mkdir backend
+          echo "Backend Build Completed" > backend/backend.txt
+
+      # Upload Artifact
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend/
 
 
   # ---------------- UNIT TEST ----------------
@@ -68,6 +81,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Download Artifact
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+
+      - name: Show Artifact
+        run: cat frontend.txt
 
       - name: Run Unit Test
         run: echo "Running Frontend Unit Tests"
@@ -79,6 +100,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+
+      - name: Show Artifact
+        run: cat backend.txt
 
       - name: Run API Test
         run: echo "Running Backend API Tests"
@@ -93,7 +121,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Security Scan
         run: echo "Running Security Scan"
 
@@ -104,11 +131,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    # GitHub Environment
     environment: Production
 
     steps:
-
       - name: Deploy Application
         run: echo "Deploying to Production"
 
